@@ -240,7 +240,6 @@ def execute_take(item_id, inventory, room):
     there is no such item in the room, this function prints
     "You cannot take that."
     """
-    new = current_room["items"]
     for item in current_room["items"]:
         if item_id != item:
             new.append(item)
@@ -248,7 +247,8 @@ def execute_take(item_id, inventory, room):
         print("you cannot take that")
         return
     inventory.append(item_id)
-    return inventory,new
+    room["items"] = new
+    return inventory,room
 
 def execute_drop(item_id, inventory, room):
     """This function takes an item_id as an argument and moves this item from the
@@ -264,37 +264,42 @@ def execute_drop(item_id, inventory, room):
         return
     inventory = inventoryTemp
     room["items"].append(item_id)
-    return inventory, room["items"]
+    return inventory, room
 
-def execute_command(inventory, room, command):
+def execute_command(command):
     """This function takes a command (a list of words as returned by
     normalise_input) and, depending on the type of action (the first word of
     the command: "go", "take", or "drop"), executes either execute_go,
     execute_take, or execute_drop, supplying the second word as the argument.
 
     """
+
+    global inventory
+    global current_room
+    room = current_room
     if command[0] == "go":
         if len(command) > 1:
-            current_room = execute_go(room["exits"], command[1])
+            return inventory, execute_go(room["exits"], command[1])
         else:
             print("Go where?")
 
     elif command[0] == "take":
         if len(command) > 1:
-            inventory, room["items"] = execute_take(command[1],inventory,room)
+            execute_take(command[1],inventory,room)
+            return inventory, current_room
         else:
             print("Take what?")
 
     elif command[0] == "drop":
         if len(command) > 1:
-            inventory, room["items"] = execute_drop(command[1],inventory,room)
+#            inventory, execute_drop(current_room["items"]) = execute_drop(command[1],inventory,room)
+            return inventory, current_room
         else:
             print("Drop what?")
 
     else:
         print("This makes no sense.")
 
-    return inventory, room
 
 
 def menu(exits, room_items, inv_items):
@@ -346,7 +351,7 @@ def main():
         # Show the menu with possible actions and ask the player
         command = menu(current_room["exits"], current_room["items"], inventory)
         # Execute the player's command
-        inventory, current_room = execute_command(inventory,current_room,command)
+        inventory, current_room = execute_command(command)
 
 
 
